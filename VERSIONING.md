@@ -19,7 +19,7 @@
 - MINOR：增加完整系统、模式或重要设计支柱；
 - PATCH：局部规则、数值、措辞或细节调整。
 
-当前版本：`Concept v0.3.1`。
+当前版本：`Concept v0.4.0`。
 
 ## 3. 每次变更必须记录
 
@@ -42,6 +42,10 @@
 - `assets/`：图片、提示词、哈希和可还原原始文件；
 - `CHANGELOG.md`：版本变化；
 - `VERSIONING.md`：本规则。
+
+- `AGENTS.md`：AI代理和新对话的最高优先级接手规则；
+- `docs/project-rules/`：详细工作流、接手清单和HTML规范；
+- `index.html`：GitHub Pages根入口；
 - `PvZ-Infinite-Archive.html`：所有仓库内容的单文件无损快照与交互式阅读界面；
 - `tools/build_archive.py`：持续生成上述HTML快照。
 
