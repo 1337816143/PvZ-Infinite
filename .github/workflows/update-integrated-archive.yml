@@ -32,8 +32,14 @@ jobs:
           PYTHONPYCACHEPREFIX: /tmp/pvz-python-cache
         run: python -m py_compile tools/*.py
 
-      - name: Apply Concept v0.4.0 incremental migration
+      - name: Apply Concept v0.4.0 gameplay migration
         run: python tools/update_concept_v0_4_0.py
+
+      - name: Upgrade professional Master GDD to Concept v0.4.1
+        run: python tools/update_master_gdd_v0_4_1.py
+
+      - name: Upgrade archive Master GDD navigation
+        run: python tools/update_archive_gdd_v0_4_1.py
 
       - name: Build lossless integrated HTML and Pages entry
         run: python tools/build_archive.py
@@ -49,5 +55,5 @@ jobs:
             echo "No archive or documentation changes."
             exit 0
           fi
-          git commit -m "docs: update Concept v0.4.0 integrated archive [skip ci]"
+          git commit -m "docs: update Concept v0.4.1 professional Master GDD [skip ci]"
           git push
