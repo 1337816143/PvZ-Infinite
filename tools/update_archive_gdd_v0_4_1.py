@@ -94,8 +94,13 @@ function tocFor(src){const seen=new Map(),items=[];for(const line of src.replace
     text = replace_between(text, "function md(src){", "function extOf(f)", new_md, "Markdown renderer")
 
     old_render = "else if(f.text){if(['md','markdown'].includes(ext))v.innerHTML='<article class=\"markdown\">'+md(source)+'</article>'+integrity(f);"
-    new_render = "else if(f.text){if(['md','markdown'].includes(ext)){const toc=f.path==='docs/design/00-master-game-concept.md'?tocFor(source):'';v.innerHTML=toc+'<article class=\"markdown\">'+md(source)+'</article>'+integrity(f)};"
-    text = replace_once(text, old_render, new_render, "Master GDD table of contents rendering")
+    fixed_render = "else if(f.text){if(['md','markdown'].includes(ext)){const toc=f.path==='docs/design/00-master-game-concept.md'?tocFor(source):'';v.innerHTML=toc+'<article class=\"markdown\">'+md(source)+'</article>'+integrity(f)}else if(['html','htm','svg'].includes(ext))"
+    broken_render = "else if(f.text){if(['md','markdown'].includes(ext)){const toc=f.path==='docs/design/00-master-game-concept.md'?tocFor(source):'';v.innerHTML=toc+'<article class=\"markdown\">'+md(source)+'</article>'+integrity(f)};else if(['html','htm','svg'].includes(ext))"
+    if broken_render in text:
+        text = text.replace(broken_render, fixed_render, 1)
+    elif fixed_render not in text:
+        replacement = "else if(f.text){if(['md','markdown'].includes(ext)){const toc=f.path==='docs/design/00-master-game-concept.md'?tocFor(source):'';v.innerHTML=toc+'<article class=\"markdown\">'+md(source)+'</article>'+integrity(f)}"
+        text = replace_once(text, old_render, replacement, "Master GDD table of contents rendering")
 
     action_anchor = "$('#search').oninput=e=>{query=e.target.value.trim();renderList()};$$('.tab').forEach(t=>t.onclick=()=>setTab(t.dataset.tab));\n"
     action_new = action_anchor + "$('#masterBtn').onclick=()=>openFile(archive.files.find(f=>f.path==='docs/design/00-master-game-concept.md'));$('#rulesBtn').onclick=()=>openFile(archive.files.find(f=>f.path==='AGENTS.md'));\n"
