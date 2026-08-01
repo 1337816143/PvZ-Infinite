@@ -28,6 +28,8 @@ jobs:
           python-version: '3.12'
 
       - name: Validate maintenance scripts
+        env:
+          PYTHONPYCACHEPREFIX: /tmp/pvz-python-cache
         run: python -m py_compile tools/*.py
 
       - name: Apply Concept v0.4.0 incremental migration
@@ -39,9 +41,10 @@ jobs:
       - name: Commit generated documentation
         shell: bash
         run: |
+          rm -rf tools/__pycache__
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md VERSIONING.md CHANGELOG.md AGENT.md AGENTS.md docs tools index.html PvZ-Infinite-Archive.html
+          git add .gitignore README.md VERSIONING.md CHANGELOG.md AGENT.md AGENTS.md docs tools index.html PvZ-Infinite-Archive.html
           if git diff --cached --quiet; then
             echo "No archive or documentation changes."
             exit 0
