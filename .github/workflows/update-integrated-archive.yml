@@ -41,6 +41,9 @@ jobs:
       - name: Restructure Master GDD directory for Concept v0.4.2
         run: python tools/restructure_master_gdd_v0_4_2.py
 
+      - name: Correct Fireseed Plan and TOC for Concept v0.4.3
+        run: python tools/update_concept_v0_4_3.py
+
       - name: Upgrade archive Master GDD navigation
         run: python tools/update_archive_gdd_v0_4_1.py
 
@@ -58,5 +61,5 @@ jobs:
             echo "No archive or documentation changes."
             exit 0
           fi
-          git commit -m "docs: update Concept v0.4.2 Master GDD directory structure [skip ci]"
+          git commit -m "docs: update Concept v0.4.3 Fireseed and TOC corrections [skip ci]"
           git push
