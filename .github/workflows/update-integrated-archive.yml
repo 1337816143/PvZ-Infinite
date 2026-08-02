@@ -38,6 +38,9 @@ jobs:
       - name: Upgrade professional Master GDD to Concept v0.4.1
         run: python tools/update_master_gdd_v0_4_1.py
 
+      - name: Restructure Master GDD directory for Concept v0.4.2
+        run: python tools/restructure_master_gdd_v0_4_2.py
+
       - name: Upgrade archive Master GDD navigation
         run: python tools/update_archive_gdd_v0_4_1.py
 
@@ -55,5 +58,5 @@ jobs:
             echo "No archive or documentation changes."
             exit 0
           fi
-          git commit -m "docs: update Concept v0.4.1 professional Master GDD [skip ci]"
+          git commit -m "docs: update Concept v0.4.2 Master GDD directory structure [skip ci]"
           git push
