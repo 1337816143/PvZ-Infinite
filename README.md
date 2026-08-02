@@ -5,7 +5,7 @@
 ## 项目状态
 
 当前阶段：**概念设计与可行性论证**。  
-当前基线：**Concept v0.4.1（2026-08-01）**。
+当前基线：**Concept v0.4.2（2026-08-01）**。
 
 ## 名称候选
 
@@ -60,7 +60,7 @@
 
 > GitHub Pages与HTML总档案默认打开主游戏设计文档。主GDD集中展示已确认、参数待验证、待定、尚未讨论、弃用和当前不做的全部状态，并提供系统边界与原型验收条件。
 
-- [主游戏设计文档（Master GDD，唯一权威基线，Concept v0.4.1）](docs/design/00-master-game-concept.md)
+- [主游戏设计文档（Master GDD，唯一权威基线，Concept v0.4.2）](docs/design/00-master-game-concept.md)
 - [单文件集成式项目档案（持续自动更新）](PvZ-Infinite-Archive.html)
 - [项目愿景与设计边界](docs/00-project-charter.md)
 - [美国农场场景调研与地图建议](docs/research/01-us-farm-scene-layout.md)
