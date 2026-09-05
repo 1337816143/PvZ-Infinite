@@ -1,0 +1,57 @@
+{
+  "lab_version": "0.2.0",
+  "source_commit": "d777c4ce076f1a40d728066a2672b574e7a1b8f0",
+  "run_id": 33958879429,
+  "job_id": 101287081806,
+  "artifact_id": 9967304235,
+  "workflow_conclusion": "success",
+  "artifact_expires_at_utc": "2026-09-19T09:48:59Z",
+  "arm_apk": {
+    "file": "farmlab-debug.apk",
+    "bytes": 56538448,
+    "sha256": "be7d195f495a51726716475fca90096124fa83f088a6f72afc88b68dc9381c04",
+    "native_abis": ["armeabi-v7a", "arm64-v8a"],
+    "internet_permission": false,
+    "signature": "ephemeral debug; not a store release"
+  },
+  "automated_tests": {
+    "base_assertions": 262254,
+    "base_failures": 0,
+    "hardening_assertions": 49,
+    "hardening_failures": 0
+  },
+  "emulator": {
+    "android": "15",
+    "api": 35,
+    "abi": "x86_64",
+    "gpu": "SwANGLE",
+    "apk_sha256": "1495fa9f3d3c02a33c315761d821b42fac52f195ee26735599cd23193b83dea4",
+    "checks_passed": 11,
+    "checks_failed": 0,
+    "result": "PASS",
+    "physical_device": false,
+    "probe_coordinate_tolerance_world_units": 0.000001
+  },
+  "physical_android": "NOT TESTED",
+  "tapplay_launch": "NOT TESTED",
+  "tapplay_stability": "NOT TESTED",
+  "competition_submission": "NOT SUBMITTED",
+  "screenshot_source": {
+    "screenshots/*.png": "Linux actual Godot renderer",
+    "emulator/*.png": "adb screencap from Android emulator"
+  },
+  "files_sha256": {
+    "screenshots/occlusion.png": "0fdfa5f5beac56d3b2e523db744aac39abc255ab8d798110b6f891002c90128f",
+    "screenshots/view_045.png": "03d7309187cc29726062f9f2450b4a6bc188559e961e0a7f3fbe3dffb6c3d776",
+    "screenshots/view_135.png": "c9c37d4844d2985128ab831daa20f2e2396bc90663fee1ea7b8f93969c55c978",
+    "screenshots/view_315.png": "205f87088c1498aed50bd84b9b28ce445e6882e9e4d636329e746fb2a60d4a2b",
+    "screenshots/view_225.png": "042b7720e974e4ee57fa733de670ae034eb049304963e6ff4bda73a64e80734b",
+    "emulator/02-placement.png": "2de2c299be37f06028c866d403de989f4358e0742e20f9c26912e0398b04472c",
+    "emulator/04-backup-recovery.png": "249d2fac63b162791cdaf347b6dcbbcf05e282659a87c9f4c14e874a3b62bd4d",
+    "emulator/latest.png": "2e1c12f38462b531fe4dedb2ab62fc3c952b7b436e41220010401f3ad33c7789",
+    "emulator/03-restart.png": "5dc662a52d6ec378536b3edf25d1fc0d67e3d730ce843ca2c98de5d7c663bde0",
+    "emulator/05-resized.png": "c8ee56464aaa2fe2bcee995de3c440f5e5e59088713c4967fa05c8a6d631e5fd",
+    "emulator/01-launch.png": "07d55bb05d5d8ee245f24d88bd32e0748f94fae6a3b84faa27f31fcfd2602e63",
+    "emulator/final-screen.png": "39778e3d51166ff5208568d8e42f0e10c03315b2db4b02313a8222a82f56a461"
+  }
+}
