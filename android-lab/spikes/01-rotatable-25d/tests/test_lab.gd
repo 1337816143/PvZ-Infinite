@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Projection = preload("res://scripts/projection.gd")
+const LabProjection = preload("res://scripts/projection.gd")
 const World = preload("res://scripts/world.gd")
 var checks: int = 0
 var failures: int = 0
@@ -13,7 +13,7 @@ func check(condition: bool, label: String) -> void:
 			printerr("FAIL: " + label)
 
 func _init() -> void:
-	var camera = Projection.new()
+	var camera = LabProjection.new()
 	for degrees in range(0, 360, 5):
 		camera.angle = deg_to_rad(float(degrees))
 		for zoom: float in [0.55, 1.0, 1.7]:

@@ -1,13 +1,13 @@
 extends Node2D
 ## Procedural diagnostic view. Every visible shape is drawn here; no game assets.
 
-const Projection = preload("res://scripts/projection.gd")
+const LabProjection = preload("res://scripts/projection.gd")
 const World = preload("res://scripts/world.gd")
 const SAVE_PATH: String = "user://camera_lab_v1.json"
 const INK: Color = Color("dcebe7")
 const MUTED: Color = Color("8da8a5")
 const ACCENT: Color = Color("8ed8b3")
-var camera = Projection.new()
+var camera = LabProjection.new()
 var world = World.new()
 var mode: String = "MOVE"
 var status: String = "PRE-JAM TECHNICAL EXERCISE | No final game content"
@@ -310,13 +310,21 @@ func _capture(directory: String) -> void:
 	for degrees: int in [45, 135, 225, 315]:
 		camera.angle = deg_to_rad(float(degrees))
 		status = "Automated engine capture | %d degrees | TapPlay NOT tested" % degrees
-		queue_redraw()
-		await get_tree().process_frame
-		await RenderingServer.frame_post_draw
-		var image: Image = get_viewport().get_texture().get_image()
-		var result: Error = image.save_png(directory.path_join("view_%03d.png" % degrees))
-		if result != OK:
+		if not await _save_capture(directory.path_join("view_%03d.png" % degrees)):
 			get_tree().quit(1)
 			return
-	print("LAB_CAPTURE_OK: real engine renders at four angles; pointer placement and pinch suppression passed")
+	camera.angle = 0.0
+	world.player = Vector2(4.5, 3.5)
+	status = "Occlusion fixture: player behind central column; column should fade"
+	if not await _save_capture(directory.path_join("occlusion.png")):
+		get_tree().quit(1)
+		return
+	print("LAB_CAPTURE_OK: real engine renders at four angles + occlusion fixture; pointer placement and pinch suppression passed")
 	get_tree().quit(0)
+
+func _save_capture(path: String) -> bool:
+	queue_redraw()
+	await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var image: Image = get_viewport().get_texture().get_image()
+	return image.save_png(path) == OK
