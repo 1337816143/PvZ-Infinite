@@ -100,24 +100,15 @@ func restore(data: Variant) -> bool:
 	return true
 
 func save_to(path: String) -> bool:
-	var temporary: String = path + ".tmp"
-	var file: FileAccess = FileAccess.open(temporary, FileAccess.WRITE)
-	if file == null:
-		last_error = "Cannot write lab save"
-		return false
-	file.store_string(JSON.stringify(snapshot()))
-	file.flush()
-	file.close()
-	var result: Error = DirAccess.rename_absolute(temporary, path)
-	last_error = "" if result == OK else "Cannot replace lab save"
-	return result == OK
+	# Notifications also reach base scripts. Every save entry must use the same store.
+	# Dynamic load avoids a preload cycle with the store's isolated world validator.
+	var storage = load("res://scripts/save_store.gd").new()
+	var ok: bool = storage.save(path, self)
+	last_error = storage.last_error
+	return ok
 
 func load_from(path: String) -> bool:
-	if not FileAccess.file_exists(path):
-		last_error = "No saved lab state yet"
-		return false
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	if file == null or file.get_length() > 65536:
-		last_error = "Unreadable or oversized lab save"
-		return false
-	return restore(JSON.parse_string(file.get_as_text()))
+	var storage = load("res://scripts/save_store.gd").new()
+	var ok: bool = storage.load_into(path, self)
+	last_error = storage.last_error
+	return ok
