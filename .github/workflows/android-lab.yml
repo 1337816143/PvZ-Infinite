@@ -1,0 +1,48 @@
+name: Android 2.5D lab
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android-lab/spikes/**'
+      - 'android-lab/ci/**'
+      - '.github/workflows/android-lab.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-lab-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-and-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install software display dependencies
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri
+      - name: Install pinned official Godot and Android templates
+        run: python android-lab/ci/setup_godot.py
+      - name: Tests, real renderer captures, Android export and package verification
+        env:
+          GODOT_SILENCE_ROOT_WARNING: '1'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: bash android-lab/ci/build_android.sh
+      - name: Preserve logs and actual artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-lab-debug-${{ github.run_number }}
+          path: android-lab/build/
+          if-no-files-found: warn
+          retention-days: 14
