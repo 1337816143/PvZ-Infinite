@@ -1,5 +1,5 @@
-"""Real Android emulator smoke test. Not a physical-device or TapPlay test.
-Uses adb UI events and debuggable app-private diagnostic output, never web previews.
+"""Actual Android emulator checks, NOT physical ARM hardware or TapPlay.
+UI actions use adb; an explicitly enabled app-private probe supplies observations.
 """
 from __future__ import annotations
 import hashlib
@@ -50,7 +50,7 @@ def record(label, condition, details=None):
 
 
 def same_snapshot(a, b):
-    # The observational probe uses rounded JSON; the native save tests are exact.
+    # Observational probe JSON is rounded. Native checkpoint tests compare exactly.
     return (a.keys() == b.keys() and all(a[k] == b[k] for k in a if k != 'player')
             and len(a['player']) == len(b['player']) == 2
             and all(math.isclose(x, y, rel_tol=0, abs_tol=1e-6) for x, y in zip(a['player'], b['player'])))
@@ -88,7 +88,10 @@ def tap(point, p):
 
 
 def launch(old_session=None):
-    shell('monkey', '-p', PKG, '-c', 'android.intent.category.LAUNCHER', '1')
+    # Explicit activity start avoids injecting Monkey's random event.
+    result = shell('am', 'start', '-W', '-n', PKG + '/com.godot.game.GodotApp')
+    with (OUT / 'launches.log').open('a') as f:
+        f.write(result + '\n')
     return probe(predicate=lambda p: p['active'] and (old_session is None or p['session'] != old_session))
 
 
@@ -110,14 +113,13 @@ def main():
     config = avd_path / 'config.ini'
     if not config.is_file():
         raise FileNotFoundError(f'AVD manager did not create its requested config: {config}')
-    text = config.read_text()
     overrides = {'hw.lcd.width': '1280', 'hw.lcd.height': '720', 'hw.lcd.density': '160', 'hw.keyboard': 'yes', 'hw.ramSize': '2048'}
-    text = '\n'.join(line for line in text.splitlines() if line.partition('=')[0].strip() not in overrides)
+    text = '\n'.join(line for line in config.read_text().splitlines() if line.partition('=')[0].strip() not in overrides)
     config.write_text(text + '\n' + '\n'.join(f'{k}={v}' for k, v in overrides.items()) + '\n')
     (OUT / 'avd-config.txt').write_text(config.read_text())
     (OUT / 'avd-list.txt').write_text(run([SDK / 'emulator/emulator', '-list-avds']))
     emulator_log = (OUT / 'emulator.log').open('wb')
-    process = subprocess.Popen([str(SDK / 'emulator/emulator'), '-avd', 'camera_lab_ci', '-port', '5554', '-no-window', '-no-audio', '-no-boot-anim', '-no-snapshot', '-gpu', 'swiftshader_indirect', '-camera-back', 'none', '-camera-front', 'none', '-cores', '2', '-memory', '2048'], stdout=emulator_log, stderr=subprocess.STDOUT)
+    process = subprocess.Popen([str(SDK / 'emulator/emulator'), '-avd', 'camera_lab_ci', '-port', '5554', '-no-window', '-no-audio', '-no-boot-anim', '-no-snapshot', '-no-metrics', '-gpu', 'swiftshader_indirect', '-camera-back', 'none', '-camera-front', 'none', '-cores', '2', '-memory', '2048'], stdout=emulator_log, stderr=subprocess.STDOUT)
     try:
         end = time.monotonic() + 300
         while time.monotonic() < end:
@@ -131,6 +133,8 @@ def main():
         for namespace, key, value in [('global', 'window_animation_scale', '0'), ('global', 'transition_animation_scale', '0'), ('global', 'animator_duration_scale', '0'), ('system', 'accelerometer_rotation', '0')]:
             shell('settings', 'put', namespace, key, value)
         shell('input', 'keyevent', '82')
+        # Cold AOSP boot applies theme overlays after boot_completed; let setup settle.
+        time.sleep(25)
         apk = OUT.parent / 'farmlab-emulator.apk'
         REPORT['emulator_apk_sha256'] = hashlib.sha256(apk.read_bytes()).hexdigest()
         REPORT['device_properties'] = {'android': shell('getprop', 'ro.build.version.release'), 'api': shell('getprop', 'ro.build.version.sdk'), 'abi': shell('getprop', 'ro.product.cpu.abi')}
@@ -190,12 +194,13 @@ def main():
         record('Android Back leaves the game activity', bool(resumed) and not any(PKG in line for line in resumed), resumed)
         logs = adb('logcat', '-d', '-v', 'threadtime')
         (OUT / 'logcat.txt').write_text(logs)
-        record('no observed Godot script errors or fatal exception', 'SCRIPT ERROR' not in logs and 'FATAL EXCEPTION' not in logs)
+        record('no observed script errors, shader link failure or fatal exception', all(s not in logs for s in ['SCRIPT ERROR', 'FATAL EXCEPTION', 'Program linking failed']))
         REPORT['result'] = 'PASS'
     finally:
         try:
             screenshot('final-screen.png')
             (OUT / 'final-logcat.txt').write_text(adb('logcat', '-d', '-v', 'threadtime', check=False))
+            (OUT / 'private-files.txt').write_text(private('find', '.', '-maxdepth', '3', '-type', 'f', check=False))
             adb('emu', 'kill', check=False)
         finally:
             process.terminate()
