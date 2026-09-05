@@ -38,6 +38,15 @@ jobs:
           GODOT_SILENCE_ROOT_WARNING: '1'
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: bash android-lab/ci/build_android.sh
+      - name: Enable hardware acceleration for isolated Android emulator
+        run: |
+          test -c /dev/kvm
+          sudo chmod a+rw /dev/kvm
+      - name: Storage and lifecycle regressions plus real Android emulator smoke test
+        env:
+          GODOT_SILENCE_ROOT_WARNING: '1'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: bash android-lab/ci/test_and_export_emulator.sh
       - name: Preserve logs and actual artifacts
         if: always()
         uses: actions/upload-artifact@v4
