@@ -1,0 +1,16 @@
+{
+  "purpose": "pre-jam technical exercise; not a competition submission",
+  "commit": "847894497bf2a445bf9d993098885876b48a1185",
+  "run_id": "33952623428",
+  "built_at_utc": "2026-09-05T07:29:06.122097+00:00",
+  "godot": "4.5.2.stable.official.6ce3de25a",
+  "apk_sha256": "46e8aa2bd78754618856e1b65055bdf869fbd800bea7cfab5d3497489b43cd33",
+  "apk_bytes": 56529952,
+  "native_abis_verified": ["armeabi-v7a", "arm64-v8a"],
+  "internet_permission": false,
+  "signature": "ephemeral debug key; not suitable for final store release",
+  "android_device_launch": "NOT TESTED",
+  "tapplay_launch": "NOT TESTED",
+  "tapplay_stability_check": "NOT TESTED",
+  "competition_submission": "NOT SUBMITTED"
+}
