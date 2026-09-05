@@ -4,12 +4,14 @@ Uses adb UI events and debuggable app-private diagnostic output, never web previ
 from __future__ import annotations
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import shlex
 import struct
 import subprocess
 import time
+import traceback
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'android-lab/build/emulator'
@@ -47,17 +49,26 @@ def record(label, condition, details=None):
         raise AssertionError(label)
 
 
+def same_snapshot(a, b):
+    # The observational probe uses rounded JSON; the native save tests are exact.
+    return (a.keys() == b.keys() and all(a[k] == b[k] for k in a if k != 'player')
+            and len(a['player']) == len(b['player']) == 2
+            and all(math.isclose(x, y, rel_tol=0, abs_tol=1e-6) for x, y in zip(a['player'], b['player'])))
+
+
 def probe(timeout=30, predicate=lambda p: True):
     end = time.monotonic() + timeout
+    last = None
     while time.monotonic() < end:
         try:
-            p = json.loads(private('cat', 'files/lab_diagnostics.json'))
-            if predicate(p):
-                return p
+            last = json.loads(private('cat', 'files/lab_diagnostics.json'))
+            if predicate(last):
+                (OUT / 'last-probe.json').write_text(json.dumps(last, indent=2))
+                return last
         except (ValueError, RuntimeError):
             pass
         time.sleep(0.4)
-    raise TimeoutError('Runtime probe not ready or expected state not reached')
+    raise TimeoutError(f'Runtime probe not ready or expected state not reached: {last}')
 
 
 def screenshot(name):
@@ -82,16 +93,29 @@ def launch(old_session=None):
 
 
 def main():
+    user_home = Path(os.environ['RUNNER_TEMP']) / 'camera-lab-android-home'
+    avd_home = user_home / 'avd'
+    avd_home.mkdir(parents=True, exist_ok=True)
+    os.environ.update(ANDROID_USER_HOME=str(user_home), ANDROID_EMULATOR_HOME=str(user_home), ANDROID_AVD_HOME=str(avd_home))
     sdkmanager = sorted(SDK.glob('cmdline-tools/*/bin/sdkmanager'))[-1]
     avdmanager = sdkmanager.with_name('avdmanager')
     image = 'system-images;android-35;default;x86_64'
-    run([sdkmanager, '--sdk_root=' + str(SDK), 'emulator', image], timeout=360)
-    p = subprocess.run([str(avdmanager), 'create', 'avd', '--force', '-n', 'camera_lab_ci', '-k', image], input=b'no\n', capture_output=True, timeout=60)
+    install_log = run([sdkmanager, '--sdk_root=' + str(SDK), 'emulator', image], timeout=360)
+    (OUT / 'sdk-install.log').write_text(install_log)
+    avd_path = avd_home / 'camera_lab_ci.avd'
+    p = subprocess.run([str(avdmanager), 'create', 'avd', '--force', '-n', 'camera_lab_ci', '-k', image, '-p', str(avd_path)], input=b'no\n', capture_output=True, timeout=60)
+    (OUT / 'avd-create.log').write_bytes(p.stdout + p.stderr)
     if p.returncode:
         raise RuntimeError(p.stderr.decode(errors='replace'))
-    config = Path.home() / '.android/avd/camera_lab_ci.avd/config.ini'
-    with config.open('a') as f:
-        f.write('\nhw.lcd.width=1280\nhw.lcd.height=720\nhw.lcd.density=160\nhw.keyboard=yes\nhw.ramSize=2048\n')
+    config = avd_path / 'config.ini'
+    if not config.is_file():
+        raise FileNotFoundError(f'AVD manager did not create its requested config: {config}')
+    text = config.read_text()
+    overrides = {'hw.lcd.width': '1280', 'hw.lcd.height': '720', 'hw.lcd.density': '160', 'hw.keyboard': 'yes', 'hw.ramSize': '2048'}
+    text = '\n'.join(line for line in text.splitlines() if line.partition('=')[0].strip() not in overrides)
+    config.write_text(text + '\n' + '\n'.join(f'{k}={v}' for k, v in overrides.items()) + '\n')
+    (OUT / 'avd-config.txt').write_text(config.read_text())
+    (OUT / 'avd-list.txt').write_text(run([SDK / 'emulator/emulator', '-list-avds']))
     emulator_log = (OUT / 'emulator.log').open('wb')
     process = subprocess.Popen([str(SDK / 'emulator/emulator'), '-avd', 'camera_lab_ci', '-port', '5554', '-no-window', '-no-audio', '-no-boot-anim', '-no-snapshot', '-gpu', 'swiftshader_indirect', '-camera-back', 'none', '-camera-front', 'none', '-cores', '2', '-memory', '2048'], stdout=emulator_log, stderr=subprocess.STDOUT)
     try:
@@ -144,29 +168,33 @@ def main():
         record('actual player moved before pause', expected['player'] != moving['snapshot']['player'])
         shell('am', 'force-stop', PKG)
         p = launch(paused['session'])
-        record('process restart restores checkpoint', p['snapshot'] == expected and p['recovered_from'] == 'primary')
+        record('process restart restores checkpoint', same_snapshot(p['snapshot'], expected) and p['recovered_from'] == 'primary', {'before': expected, 'after': p['snapshot']})
         screenshot('03-restart.png')
         backup = json.loads(private('cat', 'files/camera_lab_v1.json.bak'))
         expected_backup = json.loads(backup['payload_json']) if 'payload_json' in backup else backup
         shell('am', 'force-stop', PKG)
         private('sh', '-c', 'printf broken > files/camera_lab_v1.json')
         p = launch(p['session'])
-        record('corrupt primary recovers actual on-device backup', p['snapshot'] == expected_backup and p['recovered_from'] == 'bak')
+        record('corrupt primary recovers actual on-device backup', same_snapshot(p['snapshot'], expected_backup) and p['recovered_from'] == 'bak', {'backup': expected_backup, 'restored': p['snapshot']})
         screenshot('04-backup-recovery.png')
         shell('wm', 'size', '960x540')
         time.sleep(2)
         p = probe()
-        record('resized Android viewport remains interactive', p['active'] and all(0 <= b[0] < p['viewport'][0] and 0 <= b[1] < p['viewport'][1] for b in p['buttons'].values()))
+        record('resized Android viewport controls remain in bounds', p['active'] and all(0 <= b[0] < p['viewport'][0] and 0 <= b[1] < p['viewport'][1] for b in p['buttons'].values()))
         screenshot('05-resized.png')
         shell('input', 'keyevent', 'KEYCODE_BACK')
-        time.sleep(1)
-        record('Android Back finishes activity', not shell('pidof', PKG, check=False))
+        time.sleep(2)
+        activities = shell('dumpsys', 'activity', 'activities')
+        (OUT / 'activities-after-back.txt').write_text(activities)
+        resumed = [line for line in activities.splitlines() if 'mResumedActivity' in line or 'topResumedActivity' in line]
+        record('Android Back leaves the game activity', bool(resumed) and not any(PKG in line for line in resumed), resumed)
         logs = adb('logcat', '-d', '-v', 'threadtime')
         (OUT / 'logcat.txt').write_text(logs)
-        record('no observed Godot script errors or app fatal exception', 'SCRIPT ERROR' not in logs and 'FATAL EXCEPTION' not in logs)
+        record('no observed Godot script errors or fatal exception', 'SCRIPT ERROR' not in logs and 'FATAL EXCEPTION' not in logs)
         REPORT['result'] = 'PASS'
     finally:
         try:
+            screenshot('final-screen.png')
             (OUT / 'final-logcat.txt').write_text(adb('logcat', '-d', '-v', 'threadtime', check=False))
             adb('emu', 'kill', check=False)
         finally:
@@ -180,6 +208,7 @@ if __name__ == '__main__':
     except Exception as exc:
         REPORT['result'] = 'FAIL'
         REPORT['error'] = repr(exc)
+        REPORT['traceback'] = traceback.format_exc()
         raise
     finally:
         (OUT / 'report.json').write_text(json.dumps(REPORT, ensure_ascii=False, indent=2))
