@@ -20,7 +20,7 @@ SDK = Path(os.environ.get('ANDROID_HOME') or os.environ['ANDROID_SDK_ROOT'])
 ADB = str(SDK / 'platform-tools/adb')
 PKG = 'io.github.u1337816143.farmlab.emulator'
 SERIAL = 'emulator-5554'
-REPORT = {'kind': 'Android emulator, x86_64, API 35; NOT physical ARM hardware or TapPlay', 'commit': os.environ.get('GITHUB_SHA'), 'checks': [], 'result': 'RUNNING'}
+REPORT = {'kind': 'Android emulator, x86_64, API 35, SwANGLE; NOT physical ARM hardware or TapPlay', 'commit': os.environ.get('GITHUB_SHA'), 'checks': [], 'result': 'RUNNING'}
 
 
 def run(args, *, timeout=60, check=True, binary=False):
@@ -119,7 +119,7 @@ def main():
     (OUT / 'avd-config.txt').write_text(config.read_text())
     (OUT / 'avd-list.txt').write_text(run([SDK / 'emulator/emulator', '-list-avds']))
     emulator_log = (OUT / 'emulator.log').open('wb')
-    process = subprocess.Popen([str(SDK / 'emulator/emulator'), '-avd', 'camera_lab_ci', '-port', '5554', '-no-window', '-no-audio', '-no-boot-anim', '-no-snapshot', '-no-metrics', '-gpu', 'swiftshader_indirect', '-camera-back', 'none', '-camera-front', 'none', '-cores', '2', '-memory', '2048'], stdout=emulator_log, stderr=subprocess.STDOUT)
+    process = subprocess.Popen([str(SDK / 'emulator/emulator'), '-avd', 'camera_lab_ci', '-port', '5554', '-no-window', '-no-audio', '-no-boot-anim', '-no-snapshot', '-no-metrics', '-gpu', 'swangle', '-camera-back', 'none', '-camera-front', 'none', '-cores', '2', '-memory', '2048'], stdout=emulator_log, stderr=subprocess.STDOUT)
     try:
         end = time.monotonic() + 300
         while time.monotonic() < end:
@@ -130,7 +130,7 @@ def main():
             time.sleep(2)
         else:
             raise TimeoutError('Android boot timed out')
-        for namespace, key, value in [('global', 'window_animation_scale', '0'), ('global', 'transition_animation_scale', '0'), ('global', 'animator_duration_scale', '0'), ('system', 'accelerometer_rotation', '0')]:
+        for namespace, key, value in [('global', 'window_animation_scale', '0'), ('global', 'transition_animation_scale', '0'), ('global', 'animator_duration_scale', '0'), ('system', 'accelerometer_rotation', '0'), ('secure', 'immersive_mode_confirmations', 'confirmed')]:
             shell('settings', 'put', namespace, key, value)
         shell('input', 'keyevent', '82')
         # Cold AOSP boot applies theme overlays after boot_completed; let setup settle.
