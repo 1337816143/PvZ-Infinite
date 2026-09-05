@@ -51,7 +51,13 @@ func _read(path: String) -> Dictionary:
 			return {}
 		parsed = JSON.parse_string(body)
 	# Legacy v0.1.0 plain snapshots remain readable, but are not checksummed.
-	return parsed if _valid(parsed) else {}
+	if not _valid(parsed):
+		return {}
+	# Normalize JSON's float-only numbers through the validated native world state.
+	# Compare exact native snapshots, not Variant int/float container representations.
+	var candidate = LabWorld.new()
+	candidate.restore(parsed)
+	return candidate.snapshot()
 
 func has_any(path: String) -> bool:
 	return FileAccess.file_exists(path) or FileAccess.file_exists(path + ".bak") or FileAccess.file_exists(path + ".tmp")
@@ -65,7 +71,10 @@ func save(path: String, world: RefCounted) -> bool:
 	var current: Dictionary = _read(path)
 	if current == payload:
 		return true # Do not rotate an identical checkpoint over the useful backup.
-	var body: String = JSON.stringify(payload)
+	if current.is_empty() and has_any(path) and _read(path + ".bak").is_empty() and _read(path + ".tmp").is_empty():
+		last_error = "All checkpoint files unreadable; kept for recovery, not overwritten"
+		return false
+	var body: String = JSON.stringify(payload, "", true, true)
 	var envelope: Dictionary = {"format": "camera-lab-envelope-v1", "payload_json": body, "sha256": body.sha256_text()}
 	var temporary: String = path + ".tmp"
 	var file: FileAccess = FileAccess.open(temporary, FileAccess.WRITE)
