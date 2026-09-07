@@ -59,7 +59,7 @@ func _run() -> void:
 	root.size = Vector2i(1280,720)
 	await process_frame
 	for count: int in [0,128,512]:
-		var order: Array[bool] = [false,true] if count != 128 else [true,false]
+		var order: Array = [false,true] if count != 128 else [true,false]
 		for batch: bool in order:
 			report.stages.append(await measure(app,count,batch,6.0,true))
 	app.stress_count = 128
