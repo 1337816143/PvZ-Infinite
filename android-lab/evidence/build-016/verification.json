@@ -1,0 +1,38 @@
+{
+  "version": "Lab v0.3.0 / Render B1",
+  "date": "2026-09-07",
+  "source_commit": "a4239a76d9605a34320121ba27f2c47ed1103c95",
+  "run_id": 34092610552,
+  "run_number": 16,
+  "run_attempt": 2,
+  "job_id": 101649780560,
+  "workflow_conclusion": "success",
+  "artifact_id": 10007625506,
+  "downloaded_zip_sha256": "be66b698136fc719bc4ee9fee93993ba7214409596482ebbcaa128b52a56e0ce",
+  "arm_apk_bytes": 56555448,
+  "arm_apk_sha256": "d0e502f13fc5f89554dd7ca4c59795988f6e80907a0224cdc14b694cc5299f3d",
+  "emulator_apk_sha256": "cd61f7ba1a85b40a23ef7a8d46bd28ece4a71eb7f7e80d02c3ad81c57669c50a",
+  "native_abis_verified": ["armeabi-v7a", "arm64-v8a"],
+  "internet_permission": false,
+  "signature": "ephemeral debug key, not final release",
+  "native_assertions": {"base": 262254, "hardening": 51, "adaptive": 10945, "batch": 2172, "failures": 0},
+  "android_emulator_checks": 16,
+  "android_emulator_result": "PASS",
+  "linux_same_process_ab": [
+    {"markers": 0, "reference_fps": 59.8508317769346, "b1_fps": 59.8434992754781, "reference_p95_ms": 16.705, "b1_p95_ms": 16.69},
+    {"markers": 128, "reference_fps": 56.6602829414553, "b1_fps": 59.8554888979707, "reference_p95_ms": 19.204, "b1_p95_ms": 16.692},
+    {"markers": 512, "reference_fps": 35.3217831102563, "b1_fps": 40.550179517639, "reference_p95_ms": 33.701, "b1_p95_ms": 29.329}
+  ],
+  "linux_ab_protocol": "Same process software renderer, 1280x720, each stage warmup 2s + measurement 6s, rotating camera. One trial, not phone performance.",
+  "linux_soak": {"elapsed_ms": 60015.466, "frames_measured": 2453, "observed_fps": 40.8727976885158, "samples": 600, "cache_entries": 121, "text_cache_entries": 20, "node_delta": 0, "ground_mesh_builds": 1, "memory_delta_bytes": 35828, "world_snapshot_unchanged": true},
+  "bounded_state_pass": true,
+  "grid_alignment_after_reference_switch": true,
+  "android_software_load": [
+    {"markers": 128, "p50_ms": 119.07, "p95_ms": 138.461, "last_terrain_cpu_ms": 0.039, "last_objects_cpu_ms": 122.509},
+    {"markers": 512, "p50_ms": 281.548, "p95_ms": 328.962, "last_terrain_cpu_ms": 0.036, "last_objects_cpu_ms": 271.155}
+  ],
+  "android_performance_status": "Still slow, NOT a performance acceptance pass. Separate software emulator, not ARM hardware or TapPlay.",
+  "visual_review": ["batch/visual_reference.png", "batch/visual_b1.png", "emulator/stress-512.png"],
+  "raw_reports": "Original Actions artifact contains batch/report.json, matrix/report.json, emulator/report.json, logs and actual screenshots.",
+  "not_verified": ["physical ARM phone", "physical multi-touch", "TapPlay launch and save recovery", "TapPlay official stability", "production signing", "15/30 minute thermal power and memory testing", "competition submission"]
+}
