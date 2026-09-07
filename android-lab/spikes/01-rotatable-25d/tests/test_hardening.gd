@@ -115,13 +115,20 @@ func _run() -> void:
 	app.route = app.world.path_to(Vector2i(8, 8))
 	app.held[2] = "UP"
 	app.right_drag = true
-	app._notification(Node.NOTIFICATION_APPLICATION_PAUSED)
+	# Object.notification dispatches to every inherited script; calling the virtual
+	# _notification method directly bypasses the inherited lifecycle handlers.
+	# See Godot 4.5 Object.notification and Object._notification documentation.
+	app.wall_frame_usec = 12345
+	app.notification(Node.NOTIFICATION_APPLICATION_PAUSED)
 	check(not app.application_active and app.held.is_empty() and app.fingers.is_empty() and app.route.is_empty() and not app.right_drag, "pause clears all input and route")
+	check(app.wall_frame_usec == 0, "pause resets wall-clock measurement")
 	var player_before: Vector2 = app.world.player
 	app._process(0.1)
 	check(app.world.player == player_before, "paused scene cannot keep walking")
-	app._notification(Node.NOTIFICATION_APPLICATION_RESUMED)
+	app.wall_frame_usec = 67890
+	app.notification(Node.NOTIFICATION_APPLICATION_RESUMED)
 	check(app.application_active and app.held.is_empty(), "resume has no stuck input")
+	check(app.wall_frame_usec == 0, "resume does not count suspended time as a frame")
 	app.free()
 	cleanup(PATH)
 	print("LAB_HARDENING_RESULT: checks=%d failures=%d" % [checks, failures])
