@@ -10,3 +10,5 @@ if grep -E 'SCRIPT ERROR|Parse Error|ADAPTIVE_FAIL' "$OUTPUT/adaptive-tests.log"
 timeout 120s xvfb-run -a -s '-screen 0 1920x1440x24' godot --path "$PROJECT" --rendering-method gl_compatibility --audio-driver Dummy --script res://tests/render_matrix.gd -- --lab-unit-tests --matrix-dir="$OUTPUT/matrix" 2>&1 | tee "$OUTPUT/matrix.log"
 grep -q LAB_RENDER_MATRIX_OK "$OUTPUT/matrix.log"
 if grep -E 'SCRIPT ERROR|Parse Error|MATRIX_FAIL' "$OUTPUT/matrix.log"; then exit 1; fi
+
+bash "$ROOT/android-lab/ci/test_batch.sh"
