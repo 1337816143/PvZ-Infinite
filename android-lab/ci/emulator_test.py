@@ -143,7 +143,7 @@ def main():
         private('touch', 'files/ci_probe.enabled')
         adb('logcat', '-c')
         p = launch()
-        record('actual Android launch', p['version'] == '0.2.0', p['viewport'])
+        record('actual Android launch', p['version'] == '0.3.0', p['viewport'])
         screenshot('01-launch.png')
         angle_before = p['angle']
         width, height = screenshot('latest.png')
@@ -186,6 +186,31 @@ def main():
         p = probe()
         record('resized Android viewport controls remain in bounds', p['active'] and all(0 <= b[0] < p['viewport'][0] and 0 <= b[1] < p['viewport'][1] for b in p['buttons'].values()))
         screenshot('05-resized.png')
+        # True aspect changes (not just same-ratio downscaling), in Android itself.
+        for resolution in ('1600x720', '1024x768', '960x540'):
+            shell('wm', 'size', resolution)
+            time.sleep(3)
+            p = probe()
+            safe = p['layout']['safe']
+            sx, sy, sw, sh = safe
+            rects = list(p['layout']['bounds'].values())
+            inside = all(sx - 0.1 <= x and sy - 0.1 <= y and x+w <= sx+sw+0.1 and y+h <= sy+sh+0.1 for x,y,w,h in rects)
+            overlap = any(max(a[0], b[0]) < min(a[0]+a[2], b[0]+b[2]) - 0.1 and max(a[1], b[1]) < min(a[1]+a[3], b[1]+b[3]) - 0.1 for i,a in enumerate(rects) for b in rects[:i])
+            record('full button rectangles fit without overlap at ' + resolution, inside and not overlap, {'viewport':p['viewport'], 'rows':p['layout']['rows']})
+            screenshot('layout-' + resolution + '.png')
+        tap(p['buttons']['STRESS'], p)
+        p = probe(predicate=lambda p:p['metrics']['stress_count']==128)
+        snapshot_before = p['snapshot']
+        time.sleep(12)
+        p = probe()
+        record('Android draw-only load and bounded telemetry', p['metrics']['stress_count']==128 and p['metrics']['samples']<=600 and p['metrics']['cache_entries']==121 and same_snapshot(snapshot_before,p['snapshot']), p['metrics'])
+        screenshot('stress-128.png')
+        tap(p['buttons']['STRESS'], p)
+        p = probe(predicate=lambda p:p['metrics']['stress_count']==512)
+        time.sleep(12)
+        p = probe()
+        record('Android higher draw-only load', p['active'] and p['metrics']['samples']<=600 and same_snapshot(snapshot_before,p['snapshot']), p['metrics'])
+        screenshot('stress-512.png')
         shell('input', 'keyevent', 'KEYCODE_BACK')
         time.sleep(2)
         activities = shell('dumpsys', 'activity', 'activities')

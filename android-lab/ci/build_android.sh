@@ -13,6 +13,7 @@ grep -q 'failures=0' "$OUTPUT/tests.log"
 timeout 90s xvfb-run -a godot --path "$PROJECT" --rendering-method gl_compatibility --audio-driver Dummy -- --capture-dir="$OUTPUT/screenshots" 2>&1 | tee "$OUTPUT/capture.log"
 grep -q LAB_CAPTURE_OK "$OUTPUT/capture.log"
 if grep -E 'SCRIPT ERROR|Parse Error' "$OUTPUT/capture.log"; then exit 1; fi
+bash "$ROOT/android-lab/ci/test_adaptive.sh"
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
 : "${SDK:?Android SDK path required}"
 : "${JAVA_HOME:?Java 17 home required}"

@@ -31,7 +31,7 @@ func screen_direction(direction: Vector2) -> Vector2:
 func transform_at(anchor: Vector2, rotation: float, factor: float, shift: Vector2 = Vector2.ZERO) -> void:
 	var world_anchor: Vector2 = unproject(anchor)
 	angle = wrapf(angle + rotation, -PI, PI)
-	zoom = clampf(zoom * factor, 0.55, 1.7)
+	zoom = clampf(zoom * factor, 0.22, 1.7)
 	origin += anchor + shift - project(world_anchor)
 
 func polygon(cell: Vector2i, height: float = 0.0) -> PackedVector2Array:
