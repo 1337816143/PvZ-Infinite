@@ -1,0 +1,47 @@
+{
+  "version": "Lab v0.3.0",
+  "source_commit": "584c63e96a8644789b8cf2be1b7dd7717f430087",
+  "run_id": 34069916135,
+  "job_id": 101585230842,
+  "workflow_run_number": 13,
+  "workflow_conclusion": "success",
+  "artifact": {
+    "artifact_id": 10000172430,
+    "expires_at": "2026-09-21T00:32:17Z",
+    "zip_sha256": "d3f56ea17700afec62daeaaa589d33bc8116dfeabd5f2c1e688f70de567fc023",
+    "zip_bytes": 90864823
+  },
+  "phone_package": {
+    "purpose": "pre-jam technical exercise; not a competition submission",
+    "commit": "584c63e96a8644789b8cf2be1b7dd7717f430087",
+    "run_id": "34069916135",
+    "built_at_utc": "2026-09-07T00:29:44.474299+00:00",
+    "godot": "4.5.2.stable.official.6ce3de25a",
+    "apk_sha256": "0bb427c34ddd812af0da3a10b19d4ce3ca76caa324d39160716f2912201d51cb",
+    "apk_bytes": 56555299,
+    "native_abis_verified": ["armeabi-v7a", "arm64-v8a"],
+    "internet_permission": false,
+    "signature": "ephemeral debug key; not suitable for final store release",
+    "android_device_launch": "NOT TESTED",
+    "tapplay_launch": "NOT TESTED",
+    "tapplay_stability_check": "NOT TESTED",
+    "competition_submission": "NOT SUBMITTED"
+  },
+  "tests": {"base": 262254, "hardening": 51, "adaptive": 10945, "emulator_system_checks": 16, "failures": 0},
+  "native_software_load": [
+    {"stress_count": 0, "elapsed_ms": 10015, "frames_measured": 600, "observed_fps": 59.9101347978033, "frame_p50_ms": 16.667, "frame_p95_ms": 16.69, "draw_cpu_ms": 1.746, "node_delta": 0, "nodes": 2, "memory_delta_bytes": 33940, "cache_entries": 121, "text_cache_entries": 24, "samples": 600, "clock": "monotonic_wall_microseconds"},
+    {"stress_count": 128, "elapsed_ms": 10013, "frames_measured": 600, "observed_fps": 59.9221012683511, "frame_p50_ms": 16.667, "frame_p95_ms": 17.324, "draw_cpu_ms": 2.541, "node_delta": 0, "nodes": 2, "memory_delta_bytes": 32044, "cache_entries": 121, "text_cache_entries": 24, "samples": 600, "clock": "monotonic_wall_microseconds"},
+    {"stress_count": 512, "elapsed_ms": 10015, "frames_measured": 397, "observed_fps": 39.6405391912132, "frame_p50_ms": 25.092, "frame_p95_ms": 26.224, "draw_cpu_ms": 5.652, "node_delta": 0, "nodes": 2, "memory_delta_bytes": 36140, "cache_entries": 121, "text_cache_entries": 24, "samples": 397, "clock": "monotonic_wall_microseconds"}
+  ],
+  "emulator_software_load": [
+    {"stress_count": 128, "frame_p50_ms": 261.996, "frame_p95_ms": 314.078, "draw_cpu_ms": 244.314, "draw_phases_ms": {"objects": 51.654, "prepare_sort": 0.68, "terrain": 188.067, "ui": 3.913}, "samples": 47, "nodes": 2, "cache_entries": 121, "text_cache_entries": 20, "clock": "monotonic_wall_microseconds"},
+    {"stress_count": 512, "frame_p50_ms": 429.199, "frame_p95_ms": 502.673, "draw_cpu_ms": 364.582, "draw_phases_ms": {"objects": 159.891, "prepare_sort": 3.208, "terrain": 197.974, "ui": 3.509}, "samples": 30, "nodes": 2, "cache_entries": 121, "text_cache_entries": 20, "clock": "monotonic_wall_microseconds"}
+  ],
+  "screenshots": {
+    "emulator/layout-1024x768.png": "c72cfd5c5ce5c26870e2b72a996d378fc13648d46019217c7472fcd8ecda6c0b",
+    "emulator/stress-512.png": "271bbd929ad3464f2bb2413e8da53dc6b3e7b7d8536595fd748f6d5878acacdb",
+    "matrix/compound_045.png": "c6267f7edf34519423a55a8064496aa80a0835dd99dc43a66eb0de8cdac0019b"
+  },
+  "limits": {"physical_ARM": "NOT TESTED", "TapPlay": "NOT TESTED", "competition_submission": "NOT SUBMITTED", "duration": "short diagnostic load tests, not thermal soak", "artwork": "procedural placeholders, no final game assets"},
+  "raw_evidence_url": "https://github.com/1337816143/PvZ-Infinite/actions/runs/34069916135/artifacts/10000172430"
+}
