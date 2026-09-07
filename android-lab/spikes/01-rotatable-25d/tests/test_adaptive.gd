@@ -68,6 +68,11 @@ func _run() -> void:
 	for i: int in range(1300):
 		app._process(0.016)
 	check(app.frame_ms.size() == 600, "telemetry ring buffer remains bounded")
+	for i: int in range(100):
+		app._shape("test-slot", "Frame %d" % i, 16)
+	check(app.shaped_lines.size() <= 32, "text cache bounded under changing labels")
+	check(app._shape("repeat", "Stable", 16) == app._shape("repeat", "Stable", 16), "stable text shaping reused")
+	check(app.metrics().clock == "monotonic_wall_microseconds", "frame intervals use wall clock rather than capped engine delta")
 	app.free()
 	print("LAB_ADAPTIVE_RESULT: checks=%d failures=%d" % [checks, failures])
 	quit(0 if failures == 0 else 1)

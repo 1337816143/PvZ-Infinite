@@ -18,6 +18,27 @@ var faded_count: int = 0
 var terrain_cache: Array[PackedVector2Array] = []
 var cache_key: Array = []
 var cache_rebuilds: int = 0
+var wall_frame_usec: int = 0
+var draw_phases_ms: Dictionary = {}
+var shaped_lines: Dictionary = {}
+
+func _notification(what: int) -> void:
+	if what in [NOTIFICATION_APPLICATION_PAUSED, NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_APPLICATION_RESUMED, NOTIFICATION_APPLICATION_FOCUS_IN]:
+		wall_frame_usec = 0
+
+func _shape(slot: String, text: String, size: int, width: float = -1.0) -> TextLine:
+	# One current line per stable UI slot, never a cache of every historical string.
+	if shaped_lines.has(slot):
+		var previous: Dictionary = shaped_lines[slot]
+		if previous.text == text and previous.size == size and previous.width == width:
+			return previous.line
+	if not shaped_lines.has(slot) and shaped_lines.size() >= 32:
+		shaped_lines.clear()
+	var line: TextLine = TextLine.new()
+	line.width = width
+	line.add_string(text, ThemeDB.fallback_font, size)
+	shaped_lines[slot] = {"text": text, "size": size, "width": width, "line": line}
+	return line
 
 func _safe_rect() -> Rect2:
 	var full: Rect2 = get_viewport_rect()
@@ -96,6 +117,9 @@ func _pointer_down(id: int, position: Vector2) -> void:
 			fingers[key].moved = true
 
 func _process(delta: float) -> void:
+	var now: int = Time.get_ticks_usec()
+	var wall_ms: float = float(now - wall_frame_usec) / 1000.0 if wall_frame_usec > 0 else 0.0
+	wall_frame_usec = now if application_active else 0
 	super._process(delta)
 	safe_poll += delta
 	if safe_poll >= 0.5:
@@ -106,9 +130,9 @@ func _process(delta: float) -> void:
 		stress_time += minf(delta, 0.05)
 		frame_total += 1
 		if frame_ms.size() < 600:
-			frame_ms.append(delta * 1000.0)
+			frame_ms.append(wall_ms)
 		else:
-			frame_ms[sample_cursor] = delta * 1000.0
+			frame_ms[sample_cursor] = wall_ms
 			sample_cursor = (sample_cursor + 1) % 600
 
 func _terrain() -> void:
@@ -132,6 +156,7 @@ func _draw() -> void:
 		return
 	var started: int = Time.get_ticks_usec()
 	_terrain()
+	var after_terrain: int = Time.get_ticks_usec()
 	if world.in_bounds(selected):
 		draw_colored_polygon(camera.polygon(selected), Color(0.8, 0.8, 0.3, 0.35))
 	for p: Vector2 in route:
@@ -146,10 +171,12 @@ func _draw() -> void:
 		# Uniform deterministic diagnostic samples, not AI agents or pathfinding load.
 		var p: Vector2 = Vector2(fposmod(i * 0.6180339 + stress_time * 0.17, 1.0) * 10.0 + 0.5, fposmod(i * 0.4142135 + sin(stress_time * 0.4 + i) * 0.03, 1.0) * 10.0 + 0.5)
 		objects.append({"p": p, "kind": 3, "id": objects.size()})
+	# Compute depth once, not repeatedly inside O(n log n) comparisons.
+	for object: Dictionary in objects:
+		object["depth"] = camera.depth(object.p)
 	objects.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		var da: float = camera.depth(a.p)
-		var db: float = camera.depth(b.p)
-		return a.id < b.id if da == db else da < db)
+		return a.id < b.id if a.depth == b.depth else a.depth < b.depth)
+	var after_sort: int = Time.get_ticks_usec()
 	faded_count = 0
 	for object: Dictionary in objects:
 		if object.kind == 2:
@@ -162,8 +189,11 @@ func _draw() -> void:
 	if faded_count > 0:
 		# Explicit x-ray location aid, not a physically visible body part.
 		draw_arc(camera.project(world.player, 0.62), maxf(4.0, 11.0 * camera.zoom), 0, TAU, 24, ACCENT, 1.5, true)
+	var after_objects: int = Time.get_ticks_usec()
 	_draw_ui()
-	visual_ms = float(Time.get_ticks_usec() - started) / 1000.0
+	var ended: int = Time.get_ticks_usec()
+	visual_ms = float(ended - started) / 1000.0
+	draw_phases_ms = {"terrain": float(after_terrain - started) / 1000.0, "prepare_sort": float(after_sort - after_terrain) / 1000.0, "objects": float(after_objects - after_sort) / 1000.0, "ui": float(ended - after_objects) / 1000.0}
 
 func _draw_block(cell: Vector2i, top: float, color: Color, connected: bool) -> void:
 	var footprint: Rect2 = Rect2(Vector2(cell), Vector2.ONE)
@@ -196,9 +226,8 @@ func _draw_block(cell: Vector2i, top: float, color: Color, connected: bool) -> v
 			draw_line(high[i], high[(i + 1) % 4], Color(0.9, 0.96, 0.92, color.a * 0.5), 1.2, true)
 
 func _line(text: String, at: Vector2, width: float, size: int, color: Color) -> void:
-	while text.length() > 1 and ThemeDB.fallback_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x > width:
-		text = text.left(text.length() - 2) + "~"
-	_text(text, at, size, color)
+	var line: TextLine = _shape("header:" + str(at.y), text, size, width)
+	line.draw(get_canvas_item(), at - Vector2(0, line.get_line_ascent()), color)
 
 func _draw_ui() -> void:
 	var safe: Rect2 = ui.safe
@@ -222,16 +251,16 @@ func _draw_ui() -> void:
 		var text_size: int = 16
 		var text: String = button.action
 		if text == "STRESS":
-			text = "LOAD %d" % stress_count
-		var w: float = ThemeDB.fallback_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, text_size).x
-		_text(text, rect.position + Vector2((rect.size.x - w) * 0.5, rect.size.y * 0.5 + 5), text_size)
+			text = "FX %d" % stress_count
+		var line: TextLine = _shape("button:" + button.action, text, text_size)
+		line.draw(get_canvas_item(), rect.get_center() - line.get_size() * 0.5, INK)
 
 func metrics() -> Dictionary:
 	var samples: Array[float] = frame_ms.duplicate()
 	samples.sort()
 	var p50: float = samples[samples.size() / 2] if not samples.is_empty() else 0.0
 	var p95: float = samples[mini(samples.size() - 1, floori(samples.size() * 0.95))] if not samples.is_empty() else 0.0
-	return {"samples": samples.size(), "frame_total": frame_total, "frame_p50_ms": p50, "frame_p95_ms": p95, "draw_cpu_ms": visual_ms, "static_bytes": int(Performance.get_monitor(Performance.MEMORY_STATIC)), "nodes": int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)), "cache_entries": terrain_cache.size(), "cache_rebuilds": cache_rebuilds, "stress_count": stress_count}
+	return {"clock": "monotonic_wall_microseconds", "text_cache_entries": shaped_lines.size(), "draw_phases_ms": draw_phases_ms.duplicate(), "samples": samples.size(), "frame_total": frame_total, "frame_p50_ms": p50, "frame_p95_ms": p95, "draw_cpu_ms": visual_ms, "static_bytes": int(Performance.get_monitor(Performance.MEMORY_STATIC)), "nodes": int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)), "cache_entries": terrain_cache.size(), "cache_rebuilds": cache_rebuilds, "stress_count": stress_count}
 
 func _write_probe() -> void:
 	super._write_probe()

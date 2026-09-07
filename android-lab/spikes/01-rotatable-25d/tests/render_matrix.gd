@@ -63,10 +63,11 @@ func _run() -> void:
 		var finish: Dictionary = app.metrics()
 		finish["elapsed_ms"] = Time.get_ticks_msec() - started
 		finish["frames_measured"] = finish.frame_total - start.frame_total
+		finish["observed_fps"] = float(finish.frames_measured) * 1000.0 / float(finish.elapsed_ms)
 		finish["memory_delta_bytes"] = finish.static_bytes - start.static_bytes
 		finish["node_delta"] = finish.nodes - start.nodes
 		report.load_stages.append(finish)
-		if finish.samples > 600 or finish.cache_entries != 121 or finish.node_delta > 2:
+		if finish.samples < 10 or finish.frames_measured < 10 or finish.samples > 600 or finish.cache_entries != 121 or finish.node_delta > 2 or finish.text_cache_entries > 32:
 			push_error("MATRIX_FAIL: bounded state grew unexpectedly")
 			quit(1)
 			return
