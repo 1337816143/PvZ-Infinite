@@ -5,6 +5,7 @@ var batch_terrain_enabled: bool = true
 var ground_mesh: ArrayMesh
 var ground_mesh_builds: int = 0
 var grid_segments: PackedVector2Array = PackedVector2Array()
+var batch_cache_key: Array = []
 
 func ground_transform() -> Transform2D:
 	var s: float = camera.SCALE * camera.zoom
@@ -45,8 +46,8 @@ func _terrain() -> void:
 		return
 	prepare_ground_mesh()
 	var key: Array = [camera.angle, camera.zoom, camera.origin, camera.focus]
-	# Preserve the original bounded projection cache and all existing picking tests.
-	if key != cache_key or grid_segments.is_empty():
+	# A/B reference updates cache_key too; batch edges need their own freshness key.
+	if key != cache_key or key != batch_cache_key or grid_segments.is_empty():
 		terrain_cache.clear()
 		for y: int in range(world.SIZE):
 			for x: int in range(world.SIZE):
@@ -58,6 +59,7 @@ func _terrain() -> void:
 			grid_segments.append(camera.project(Vector2(0, i)))
 			grid_segments.append(camera.project(Vector2(world.SIZE, i)))
 		cache_key = key
+		batch_cache_key = key.duplicate()
 		cache_rebuilds += 1
 	draw_set_transform_matrix(ground_transform())
 	draw_mesh(ground_mesh, null)
