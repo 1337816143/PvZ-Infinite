@@ -19,6 +19,7 @@
 - [ ] `docs/decisions/README.md`
 - [ ] `docs/project-rules/WORKFLOW.md`
 - [ ] `docs/project-rules/HTML-ARCHIVE-SPEC.md`
+- [ ] `docs/project-rules/EVOLUTION-SYNC.md`
 - [ ] 最近三轮完整对话
 - [ ] 最近讨论纪要
 - [ ] 与当前任务相关的专题文档
@@ -47,6 +48,7 @@
 - [ ] 是否需要外部资料和最新官方文档？
 - [ ] 是否涉及知识产权、交易经济、联机安全或付费公平？
 - [ ] 是否需要生成图、3D概念或界面示意？
+- [ ] 本轮是否属于 `EVOLUTION-SYNC.md` 规定的“实质更新”，需要同步个人进化网站的 AI 3D 创作与游戏开发实验室？
 
 ## E. 修改过程中
 
@@ -57,6 +59,7 @@
 - [ ] 关键状态明确标注为已确认、建议、待验证或弃用。
 - [ ] 原型范围没有无控制膨胀。
 - [ ] 新资产记录了来源、许可和哈希。
+- [ ] 需要公开同步时，只提炼适合公开的项目摘要和证据，不把完整聊天、密钥或未授权资产带入网站。
 
 ## F. 结束前
 
@@ -70,6 +73,7 @@
 - [ ] `PvZ-Infinite-Archive.html`已重建。
 - [ ] HTML包含规则文件和本轮新文件。
 - [ ] 多格式预览没有明显语法错误。
+- [ ] 若触发个人进化网站同步，已按 `EVOLUTION-SYNC.md` 更新/提交 `My-Evolution`，并如实记录CI与发布状态。
 - [ ] 最终回复没有夸大未完成工作。
 
 ## 快速接手摘要
@@ -79,7 +83,8 @@
 1. `AGENTS.md`
 2. `docs/design/00-master-game-concept.md`
 3. `CHANGELOG.md`
-4. 最近一轮对话
-5. 当前任务的专题文件
+4. `docs/project-rules/EVOLUTION-SYNC.md`
+5. 最近一轮对话
+6. 当前任务的专题文件
 
 但在提交修改前，必须补完全部检查项。
